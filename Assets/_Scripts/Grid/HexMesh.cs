@@ -52,11 +52,42 @@ public class HexMesh : MonoBehaviour {
 			center + HexMetrics.GetSecondSolidCorner(direction)
 		);
 
-		TriangulateEdgeFan(center, e, cell.Color);
+		if (cell.HasRiver) {
+			if (cell.HasRiverThroughEdge(direction)) {
+				e.v3.y = cell.StreamBedY;
+				TriangulateWithRiver(direction, cell, center, e);
+			}
+		}
+		else {
+			TriangulateEdgeFan(center, e, cell.Color);
+		}
 
 		if (direction <= HexDirection.SE) {
 			TriangulateConnection(direction, cell, e);
 		}
+	}
+
+	void TriangulateWithRiver (HexDirection direction, HexCell cell, Vector3 center, EdgeVertices e) {
+		Vector3 centerL = center + HexMetrics.GetFirstSolidCorner(direction.Previous()) * 0.25f;
+		Vector3 centerR = center + HexMetrics.GetSecondSolidCorner(direction.Next()) * 0.25f;
+
+		EdgeVertices m = new EdgeVertices(
+			Vector3.Lerp(centerL, e.v1, 0.5f),
+			Vector3.Lerp(centerR, e.v5, 0.5f),
+			1f / 6f
+		);
+		m.v3.y = center.y = e.v3.y;
+
+		TriangulateEdgeStrip(m, cell.Color, e, cell.Color);
+
+		AddTriangle(centerL, m.v1, m.v2);
+		AddTriangleColor(cell.Color);
+		AddQuad(centerL, center, m.v2, m.v3);
+		AddQuadColor(cell.Color);
+		AddQuad(center, centerR, m.v3, m.v4);
+		AddQuadColor(cell.Color);
+		AddTriangle(centerR, m.v4, m.v5);
+		AddTriangleColor(cell.Color);
 	}
 
 	void TriangulateEdgeFan (Vector3 center, EdgeVertices edge, Color color) {
@@ -65,6 +96,8 @@ public class HexMesh : MonoBehaviour {
 		AddTriangle(center, edge.v2, edge.v3);
 		AddTriangleColor(color);
 		AddTriangle(center, edge.v3, edge.v4);
+		AddTriangleColor(color);
+		AddTriangle(center, edge.v4, edge.v5);
 		AddTriangleColor(color);
 	}
 
@@ -79,8 +112,12 @@ public class HexMesh : MonoBehaviour {
 		bridge.y = neighbor.Position.y - cell.Position.y;
 		EdgeVertices e2 = new EdgeVertices(
 			e1.v1 + bridge,
-			e1.v4 + bridge
+			e1.v5 + bridge
 		);
+
+		if (cell.HasRiverThroughEdge(direction)) {
+			e2.v3.y = neighbor.StreamBedY;
+		}
 
 		if (cell.GetEdgeType(direction) == HexEdgeType.Slope) {
 			TriangulateEdgeTerraces(e1, cell, e2, neighbor);
@@ -92,22 +129,22 @@ public class HexMesh : MonoBehaviour {
 		//Triangles
 		HexCell nextNeighbor = cell.GetNeighbor(direction.Next());
 		if (direction <= HexDirection.E && nextNeighbor != null) {
-			Vector3 v5 = e1.v4 + HexMetrics.GetBridge(direction.Next());
+			Vector3 v5 = e1.v5 + HexMetrics.GetBridge(direction.Next());
 			v5.y = nextNeighbor.Position.y;
 			
 			if (cell.Elevation <= neighbor.Elevation) {
 				if (cell.Elevation <= nextNeighbor.Elevation) {
-					TriangulateCorner(e1.v4, cell, e2.v4, neighbor, v5, nextNeighbor);
+					TriangulateCorner(e1.v5, cell, e2.v5, neighbor, v5, nextNeighbor);
 				}
 				else {
-					TriangulateCorner(v5, nextNeighbor, e1.v4, cell, e2.v4, neighbor);
+					TriangulateCorner(v5, nextNeighbor, e1.v5, cell, e2.v5, neighbor);
 				}
 			}
 			else if (neighbor.Elevation <= nextNeighbor.Elevation) {
-				TriangulateCorner(e2.v4, neighbor, v5, nextNeighbor, e1.v4, cell);
+				TriangulateCorner(e2.v5, neighbor, v5, nextNeighbor, e1.v5, cell);
 			}
 			else {
-				TriangulateCorner(v5, nextNeighbor, e1.v4, cell, e2.v4, neighbor);
+				TriangulateCorner(v5, nextNeighbor, e1.v5, cell, e2.v5, neighbor);
 			}
 		}
 	}
@@ -118,6 +155,8 @@ public class HexMesh : MonoBehaviour {
 		AddQuad(e1.v2, e1.v3, e2.v2, e2.v3);
 		AddQuadColor(c1, c2);
 		AddQuad(e1.v3, e1.v4, e2.v3, e2.v4);
+		AddQuadColor(c1, c2);
+		AddQuad(e1.v4, e1.v5, e2.v4, e2.v5);
 		AddQuadColor(c1, c2);
 	}
 
@@ -331,6 +370,13 @@ public class HexMesh : MonoBehaviour {
 		triangles.Add(vertexIndex + 1);
 		triangles.Add(vertexIndex + 2);
 		triangles.Add(vertexIndex + 3);
+	}
+
+	void AddQuadColor (Color color) {
+		colors.Add(color);
+		colors.Add(color);
+		colors.Add(color);
+		colors.Add(color);
 	}
 
 	void AddQuadColor (Color c1, Color c2) {
