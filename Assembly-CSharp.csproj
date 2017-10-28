@@ -62,7 +62,9 @@
      <Compile Include="Assets\_Scripts\Grid\Structs\HexDirection.cs" />
      <Compile Include="Assets\_Scripts\Grid\Structs\HexEdgeType.cs" />
      <Compile Include="Assets\_Scripts\HexMapCamera.cs" />
+     <Compile Include="Assets\_Scripts\ListPool.cs" />
      <None Include="Assets\Shaders\VertexColors.shader" />
+     <None Include="Assets\Shaders\RiverShader.shader" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

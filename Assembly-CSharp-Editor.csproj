@@ -53,6 +53,7 @@
   <ItemGroup>
      <Compile Include="Assets\_Scripts\Grid\Editor\HexCoordinatesDrawer.cs" />
      <None Include="Assets\Shaders\VertexColors.shader" />
+     <None Include="Assets\Shaders\RiverShader.shader" />
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/Advertisements/Editor/UnityEditor.Advertisements.dll</HintPath>
  </Reference>
